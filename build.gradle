@@ -1,0 +1,125 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+    id 'org.sonarqube' version '6.2.0.5505'
+}
+
+group = 'com.mywork'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    testcontainersVersion = '1.20.4'
+}
+
+dependencies {
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Resilience4j - Circuit Breaker, Retry, Rate Limiter
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.3.0'
+    implementation 'org.springframework:spring-aspects'
+
+    // Web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // JPA + Postgres
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Jackson Java 8 date/time support
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Actuator for health checks
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Flyway - DB migrations
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // MockMvc support for Spring Boot 4
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    // H2 in-memory DB for controller unit tests
+    testRuntimeOnly 'com.h2database:h2'
+
+    // RestAssured Spring MockMvc
+    testImplementation 'io.rest-assured:spring-mock-mvc:5.4.0'
+
+    // Testcontainers for integration tests with real Postgres
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                'com/mywork/billingservice/domain/*',
+                'com/mywork/billingservice/dto/*',
+                'com/mywork/billingservice/exception/*',
+                'com/mywork/billingservice/config/*',
+                'com/mywork/billingservice/BillingServiceApplication*'
+            ])
+        }))
+    }
+}
+
+sonar {
+    properties {
+        property 'sonar.projectKey', 'gittomyrepo_billing-service'
+        property 'sonar.organization', 'gittomyrepo'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+    }
+}
+
+// 'check' task runs tests + coverage verification (equivalent of mvn verify)
+check.dependsOn jacocoTestCoverageVerification
