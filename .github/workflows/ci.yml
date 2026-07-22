@@ -33,7 +33,7 @@ jobs:
       - name: Analyse with SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar -Dsonar.projectKey=gittomyrepo_billing-service
+        run: ./gradlew sonar -Dsonar.projectKey=gittomyrepo-1_billing-service
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4

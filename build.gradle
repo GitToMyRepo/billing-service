@@ -115,8 +115,8 @@ jacocoTestCoverageVerification {
 
 sonar {
     properties {
-        property 'sonar.projectKey', 'gittomyrepo_billing-service'
-        property 'sonar.organization', 'gittomyrepo'
+        property 'sonar.projectKey', 'gittomyrepo-1_billing-service'
+        property 'sonar.organization', 'gittomyrepo-1'
         property 'sonar.host.url', 'https://sonarcloud.io'
     }
 }
